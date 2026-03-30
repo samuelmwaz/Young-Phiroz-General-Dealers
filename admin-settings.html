@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>System Settings — Young Phiroz Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sand:#f0e8df; --terracotta:#c17a55; --sienna:#8f4e28; --dark:#1e1108;
+      --success:#5a9068; --danger:#b84f4f; --warning:#c4973a; --cream:#faf5f0;
+      --white:#fff; --border:#e8ddd5; --sidebar:240px;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'DM Sans',sans-serif; background:var(--cream); display:flex; color:var(--dark); }
+
+    /* SIDEBAR (Matches your admin_brunches.html) */
+    .sidebar { width:var(--sidebar); background:var(--dark); min-height:100vh; position:fixed; padding:30px 20px; color:white; }
+    .nav-item { padding:12px; cursor:pointer; color:var(--sand); opacity:0.7; font-size:0.9rem; transition:0.3s; display:block; text-decoration:none; }
+    .nav-item:hover, .nav-item.active { opacity:1; background:rgba(255,255,255,0.05); color:var(--terracotta); }
+
+    /* CONTENT */
+    .main { margin-left:var(--sidebar); flex:1; padding:50px; }
+    .header { margin-bottom:40px; border-bottom:1px solid var(--border); padding-bottom:20px; }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:30px; }
+    
+    .card { background:var(--white); padding:30px; border:1px solid var(--border); }
+    .card h3 { font-family:'Cormorant Garamond'; font-size:1.5rem; margin-bottom:20px; color:var(--sienna); border-bottom:1px solid var(--sand); padding-bottom:10px; }
+
+    .field { margin-bottom:15px; }
+    label { display:block; font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px; color:var(--muted); }
+    input, select { width:100%; padding:10px; border:1px solid var(--sand); background:var(--cream); font-family:inherit; }
+    
+    .btn-save { background:var(--terracotta); color:white; border:none; padding:12px 25px; cursor:pointer; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; transition:0.3s; }
+    .btn-save:hover { background:var(--sienna); }
+
+    /* APPROVAL TABLE */
+    table { width:100%; border-collapse:collapse; margin-top:10px; }
+    th { text-align:left; font-size:0.7rem; padding:10px; border-bottom:1px solid var(--sand); color:var(--terracotta); }
+    td { padding:10px; font-size:0.85rem; border-bottom:1px solid var(--cream); }
+    .badge-pending { background:var(--warning); color:white; padding:2px 6px; font-size:0.6rem; border-radius:2px; }
+    .action-btn { cursor:pointer; border:none; padding:4px 8px; font-size:0.7rem; margin-right:5px; color:white; }
+  </style>
+</head>
+<body>
+
+<div class="sidebar">
+  <h2 style="font-family:'Cormorant Garamond'; margin-bottom:30px;">Young Phiroz</h2>
+  <a href="admin_brunches.html" class="nav-item">Branches & Staff</a>
+  <a href="admin-settings.html" class="nav-item active">System Settings</a>
+  <a href="#" onclick="exportData()" class="nav-item" style="margin-top:20px; border-top:1px solid #333;">Backup Database</a>
+</div>
+
+<div class="main">
+  <div class="header">
+    <h1 style="font-family:'Cormorant Garamond'; font-size:2.5rem;">Admin Settings</h1>
+    <p style="font-size:0.8rem; color:var(--terracotta);">GLOBAL CONTROL PANEL</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>General Configuration</h3>
+      <div class="field">
+        <label>Company Name</label>
+        <input type="text" id="cfg-name" value="Young Phiroz">
+      </div>
+      <div class="field">
+        <label>Currency Symbol</label>
+        <input type="text" id="cfg-curr" value="ZMW">
+      </div>
+      <div class="field">
+        <label>Staff Clock-in Grace Period (Minutes)</label>
+        <input type="number" id="cfg-grace" value="15">
+      </div>
+      <button class="btn-save" onclick="saveConfig()">Update System Defaults</button>
+    </div>
+
+    <div class="card">
+      <h3>Manager Access Requests</h3>
+      <table id="manager-request-table">
+        <thead>
+          <tr><th>Name</th><th>Branch</th><th>Status</th><th>Action</th></tr>
+        </thead>
+        <tbody id="manager-request-body">
+          </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Data Maintenance</h3>
+      <p style="font-size:0.8rem; margin-bottom:15px; color:var(--danger);">Warning: These actions are permanent.</p>
+      <button class="btn-save" style="background:#444; margin-bottom:10px;" onclick="clearLogs()">Purge Attendance Logs</button>
+      <button class="btn-save" style="background:var(--danger);" onclick="factoryReset()">Factory Reset System</button>
+    </div>
+
+    <div class="card">
+      <h3>Live Branch Control</h3>
+      <div id="branch-toggles">
+        </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const gs=(k,d)=>JSON.parse(localStorage.getItem(k))||d;
+  const ss=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+
+  function init() {
+    renderManagers();
+    renderBranchStatus();
+    // Load config
+    const cfg = gs('yp_config', {name:'Young Phiroz', curr:'ZMW', grace:15});
+    document.getElementById('cfg-name').value = cfg.name;
+    document.getElementById('cfg-curr').value = cfg.curr;
+    document.getElementById('cfg-grace').value = cfg.grace;
+  }
+
+  function renderManagers() {
+    const managers = gs('yp_managers', []);
+    const body = document.getElementById('manager-request-body');
+    body.innerHTML = managers.map(m => `
+      <tr>
+        <td>${m.name}</td>
+        <td>${m.branch}</td>
+        <td><span class="badge-pending">${m.status.toUpperCase()}</span></td>
+        <td>
+          ${m.status === 'pending' ? 
+            `<button onclick="updateMgrStatus('${m.username}', 'approved')" class="action-btn" style="background:var(--success)">Approve</button>
+             <button onclick="updateMgrStatus('${m.username}', 'rejected')" class="action-btn" style="background:var(--danger)">Deny</button>` 
+            : '<span style="color:#aaa">Resolved</span>'}
+        </td>
+      </tr>
+    `).join('') || '<tr><td colspan="4" style="text-align:center">No pending requests</td></tr>';
+  }
+
+  function updateMgrStatus(username, status) {
+    let managers = gs('yp_managers', []);
+    const idx = managers.findIndex(m => m.username === username);
+    if(idx !== -1) {
+      managers[idx].status = status;
+      ss('yp_managers', managers);
+      renderManagers();
+    }
+  }
+
+  function renderBranchStatus() {
+    const branches = gs('yp_branches', []);
+    const container = document.getElementById('branch-toggles');
+    container.innerHTML = branches.map(b => `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--cream);">
+        <span style="font-size:0.9rem">${b.name}</span>
+        <select onchange="updateBranchMode('${b.id}', this.value)" style="width:auto; padding:5px;">
+          <option value="Open" ${b.status==='Open'?'selected':''}>Open</option>
+          <option value="Closed" ${b.status==='Closed'?'selected':''}>Closed</option>
+          <option value="Maintenance" ${b.status==='Maintenance'?'selected':''}>Maintenance</option>
+        </select>
+      </div>
+    `).join('') || '<p>No branches registered.</p>';
+  }
+
+  function updateBranchMode(id, status) {
+    let brs = gs('yp_branches', []);
+    const idx = brs.findIndex(b => b.id == id);
+    if(idx !== -1) {
+      brs[idx].status = status;
+      ss('yp_branches', brs);
+    }
+  }
+
+  function saveConfig() {
+    const cfg = {
+      name: document.getElementById('cfg-name').value,
+      curr: document.getElementById('cfg-curr').value,
+      grace: document.getElementById('cfg-grace').value
+    };
+    ss('yp_config', cfg);
+    alert("System settings saved successfully.");
+  }
+
+  function clearLogs() {
+    if(confirm("Are you sure? This will delete all clock-in/out history.")) {
+      ss('yp_logs', []);
+      alert("Logs purged.");
+    }
+  }
+
+  function factoryReset() {
+    if(confirm("CRITICAL WARNING: This will delete ALL branches, managers, staff, and logs. This cannot be undone.")) {
+      localStorage.clear();
+      location.reload();
+    }
+  }
+
+  function exportData() {
+    const data = localStorage;
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'young_phiroz_full_backup.json';
+    a.click();
+  }
+
+  init();
+</script>
+</body>
+</html>

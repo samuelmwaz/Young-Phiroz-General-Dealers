@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard — Young Phiroz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --sand:#f0e8df;--terracotta:#c17a55;--sienna:#8f4e28;--dark:#1e1108;
+      --success:#5a9068;--danger:#b84f4f;--warning:#c4973a;--cream:#faf5f0;
+      --muted:#9e7d6a;--white:#fff;--border:#e8ddd5;--sidebar:240px;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'DM Sans',sans-serif;background:var(--cream);display:flex;min-height:100vh;color:var(--dark);}
+    .sidebar{width:var(--sidebar);background:var(--dark);min-height:100vh;position:fixed;top:0;left:0;display:flex;flex-direction:column;z-index:100;}
+    .sidebar-logo{padding:28px 24px 20px;border-bottom:1px solid #3a2518;}
+    .sidebar-logo h2{font-family:'Cormorant Garamond';font-size:1.4rem;color:var(--white);letter-spacing:0.5px;}
+    .sidebar-logo span{font-size:0.65rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
+    .nav{padding:20px 0;flex:1;}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:12px 24px;cursor:pointer;color:#b8a090;font-size:0.82rem;transition:all 0.2s;border-left:3px solid transparent;}
+    .nav-item:hover{background:#2c1a0e;color:var(--white);}
+    .nav-item.active{background:#2c1a0e;color:var(--terracotta);border-left-color:var(--terracotta);}
+    .sidebar-footer{padding:16px 24px;border-top:1px solid #3a2518;font-size:0.65rem;color:var(--muted);}
+    .badge-count{background:var(--terracotta);color:white;border-radius:10px;font-size:0.6rem;padding:1px 6px;margin-left:auto;}
+    .main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;}
+    .topbar{background:var(--white);border-bottom:1px solid var(--border);padding:16px 30px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+    .topbar-title{font-family:'Cormorant Garamond';font-size:1.3rem;font-weight:600;}
+    .topbar-actions{display:flex;gap:10px;align-items:center;}
+    .content{padding:28px 30px;flex:1;}
+    .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+    .metric{background:var(--white);padding:20px;border-bottom:3px solid var(--sand);}
+    .metric-label{font-size:0.62rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px;}
+    .metric-value{font-family:'Cormorant Garamond';font-size:2.2rem;font-weight:600;line-height:1;}
+    .metric-sub{font-size:0.7rem;color:var(--muted);margin-top:4px;}
+    .metric.accent{background:var(--dark);color:var(--white);}
+    .metric.accent .metric-label{color:#8a6a55;}
+    .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+    .section-title{font-family:'Cormorant Garamond';font-size:1.15rem;font-weight:600;}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+    .notice-box{background:var(--dark);padding:22px 26px;margin-bottom:28px;display:flex;gap:14px;align-items:center;}
+    .notice-box input{flex:1;background:#2c1a0e;border:1px solid #4a2f1a;color:var(--white);padding:10px 14px;font-family:'DM Sans';font-size:0.82rem;}
+    .notice-box input::placeholder{color:#6a4a35;}
+    .btn{border:none;padding:9px 18px;cursor:pointer;font-family:'DM Sans';font-size:0.78rem;font-weight:500;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;}
+    .btn-primary{background:var(--terracotta);color:var(--white);}
+    .btn-primary:hover{background:var(--sienna);}
+    .btn-success{background:var(--success);color:var(--white);}
+    .btn-danger{background:none;border:none;color:var(--danger);cursor:pointer;font-size:0.75rem;padding:4px 8px;}
+    .btn-ghost{background:none;border:1px solid var(--border);color:var(--dark);padding:7px 14px;cursor:pointer;font-size:0.75rem;font-family:'DM Sans';}
+    .btn-ghost:hover{border-color:var(--terracotta);color:var(--terracotta);}
+    .card{background:var(--white);padding:18px;margin-bottom:10px;border:1px solid var(--border);}
+    .inbox-item{background:var(--white);border-left:3px solid var(--terracotta);padding:14px 18px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);border-right:1px solid var(--border);border-bottom:1px solid var(--border);}
+    .inbox-from{font-weight:500;font-size:0.82rem;}
+    .inbox-msg{font-size:0.76rem;color:var(--muted);margin-top:3px;}
+    .inbox-time{font-size:0.65rem;color:var(--muted);}
+    .table-wrap{background:var(--white);border:1px solid var(--border);overflow:hidden;}
+    table{width:100%;border-collapse:collapse;}
+    th{background:var(--sand);text-align:left;padding:10px 14px;font-size:0.6rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--sienna);font-weight:500;}
+    td{padding:12px 14px;border-bottom:1px solid var(--sand);font-size:0.8rem;}
+    tr:last-child td{border-bottom:none;}
+    tr:hover td{background:#fdf9f6;}
+    .dot{height:7px;width:7px;border-radius:50%;display:inline-block;margin-right:6px;}
+    .badge{font-size:0.6rem;padding:3px 8px;text-transform:uppercase;letter-spacing:1px;font-weight:500;}
+    .badge-active{background:#e8f5ec;color:var(--success);}
+    .badge-pending{background:#fef6e4;color:var(--warning);}
+    .badge-away{background:var(--sand);color:var(--muted);}
+    .search-row{display:flex;gap:10px;margin-bottom:18px;}
+    .search-row input,.search-row select{padding:9px 12px;border:1px solid var(--border);background:var(--white);font-family:'DM Sans';font-size:0.8rem;color:var(--dark);}
+    .search-row input{flex:1;}
+    .modal-bg{position:fixed;inset:0;background:rgba(30,17,8,0.6);z-index:500;display:none;align-items:center;justify-content:center;}
+    .modal-bg.open{display:flex;}
+    .modal{background:var(--white);width:500px;max-width:95vw;padding:28px;max-height:90vh;overflow-y:auto;}
+    .modal h3{font-family:'Cormorant Garamond';font-size:1.2rem;margin-bottom:18px;}
+    .field{margin-bottom:14px;}
+    .field label{display:block;font-size:0.62rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:5px;}
+    .field input,.field select,.field textarea{width:100%;padding:9px 12px;border:1px solid var(--border);font-family:'DM Sans';font-size:0.82rem;background:var(--cream);}
+    .field textarea{height:80px;resize:vertical;}
+    .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+    .chart-bar-wrap{margin-top:8px;}
+    .chart-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:0.75rem;}
+    .chart-row-label{width:90px;color:var(--muted);text-align:right;flex-shrink:0;}
+    .chart-bar{height:18px;background:var(--terracotta);opacity:0.8;transition:width 0.5s ease;min-width:3px;}
+    .chart-val{color:var(--sienna);font-weight:500;white-space:nowrap;}
+    .tab-hidden{display:none;}
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--dark);color:var(--white);padding:12px 20px;font-size:0.8rem;z-index:1000;transform:translateY(80px);opacity:0;transition:all 0.3s;pointer-events:none;}
+    .toast.show{transform:translateY(0);opacity:1;}
+    .toast.success{border-left:3px solid var(--success);}
+    .toast.error{border-left:3px solid var(--danger);}
+    .branch-card{background:var(--white);border:1px solid var(--border);padding:16px 18px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+    .branch-status{font-size:0.65rem;padding:3px 8px;background:#e8f5ec;color:var(--success);text-transform:uppercase;letter-spacing:1px;}
+    .branch-status.closed{background:var(--sand);color:var(--muted);}
+    /* Products */
+    .products-grid-admin{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-top:16px;}
+    .prod-admin-card{background:var(--white);border:1px solid var(--border);padding:14px;position:relative;}
+    .prod-admin-card img{width:100%;height:100px;object-fit:cover;display:block;margin-bottom:8px;}
+    .prod-admin-card .no-img{width:100%;height:100px;background:var(--sand);display:flex;align-items:center;justify-content:center;font-size:2rem;margin-bottom:8px;}
+    .prod-admin-card h4{font-family:'Cormorant Garamond';font-size:1rem;margin-bottom:2px;}
+    .prod-admin-card .pcat{font-size:0.6rem;text-transform:uppercase;color:var(--muted);letter-spacing:1px;}
+    .prod-admin-card .pprice{font-family:'Cormorant Garamond';font-size:1.1rem;color:var(--terracotta);margin-top:4px;}
+    .prod-admin-card .card-actions{display:flex;gap:6px;margin-top:8px;}
+    .prod-admin-card .special-badge{position:absolute;top:8px;right:8px;background:var(--terracotta);color:white;font-size:0.55rem;padding:2px 6px;letter-spacing:1px;text-transform:uppercase;}
+    /* Specials admin */
+    .special-admin-card{background:var(--white);border:1px solid var(--border);padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:14px;}
+    .special-admin-card img{width:50px;height:50px;object-fit:cover;border-radius:50%;}
+    .special-admin-card .no-img{width:50px;height:50px;background:var(--sand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+    .special-admin-card .s-info{flex:1;}
+    .special-admin-card h4{font-size:0.88rem;font-weight:500;}
+    .special-admin-card .s-meta{font-size:0.72rem;color:var(--muted);}
+    /* Flow charts */
+    .flow-bar{height:14px;border-radius:2px;background:var(--terracotta);opacity:0.75;transition:width 0.6s;}
+    .flow-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:0.75rem;}
+    .flow-label{width:120px;color:var(--muted);flex-shrink:0;font-size:0.72rem;}
+    .flow-val{color:var(--sienna);font-weight:500;white-space:nowrap;}
+    @media(max-width:900px){.metrics{grid-template-columns:repeat(2,1fr);}.grid-2{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h2>Young Phiroz</h2>
+    <span>Admin Console</span>
+  </div>
+  <nav class="nav">
+    <div class="nav-item active" onclick="showTab('overview')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Overview
+    </div>
+    <div class="nav-item" onclick="showTab('inbox')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M4 4h16v12H4z"/><polyline points="4,4 12,13 20,4"/></svg>
+      Inbox & Orders
+      <span class="badge-count" id="inbox-badge">0</span>
+    </div>
+    <div class="nav-item" onclick="showTab('branches')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+      Branches
+      <span class="badge-count" id="approval-badge">0</span>
+    </div>
+    <div class="nav-item" onclick="showTab('staff')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      Staff Management
+    </div>
+    <div class="nav-item" onclick="showTab('products')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      Products
+    </div>
+    <div class="nav-item" onclick="showTab('specials')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Specials
+    </div>
+    <div class="nav-item" onclick="showTab('analytics')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Analytics & Flow
+    </div>
+  </nav>
+  <div class="sidebar-footer">Young Phiroz Group © 2025</div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">Overview</div>
+    <div class="topbar-actions">
+      <button class="btn-ghost" onclick="exportAll()">↓ Export Data</button>
+      <button class="btn btn-primary" onclick="openAddStaffModal()">+ Add Staff</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="notice-box">
+      <svg width="16" height="16" fill="none" stroke="#8a6a55" stroke-width="1.8" viewBox="0 0 24 24"><path d="M22 17H2a3 3 0 004-3V9a8 8 0 0116 0v5a3 3 0 004 3"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      <input type="text" id="notice-input" placeholder="Broadcast message to all managers…">
+      <button class="btn btn-primary" onclick="sendNotice()">Send Notice</button>
+    </div>
+
+    <!-- OVERVIEW TAB -->
+    <div id="tab-overview">
+      <div class="metrics" id="metrics-grid"></div>
+      <div class="grid-2">
+        <div>
+          <div class="section-header"><span class="section-title">Recent Manager Requests</span></div>
+          <div id="recent-inbox"></div>
+        </div>
+        <div>
+          <div class="section-header"><span class="section-title">Branch Status</span></div>
+          <div id="overview-branches"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INBOX TAB -->
+    <div id="tab-inbox" class="tab-hidden">
+      <div class="section-header">
+        <span class="section-title">Manager Requests</span>
+        <button class="btn-ghost" onclick="clearAllReqs()">Clear All</button>
+      </div>
+      <div id="inbox-list"></div>
+    </div>
+
+    <!-- BRANCHES TAB -->
+    <div id="tab-branches" class="tab-hidden">
+      <div class="section-header"><span class="section-title">Pending Approvals</span></div>
+      <div id="approval-list" style="margin-bottom:24px"></div>
+      <div class="section-header">
+        <span class="section-title">Active Locations</span>
+        <button class="btn btn-primary" onclick="openAddBranchModal()">+ Add Branch</button>
+      </div>
+      <div id="branch-list"></div>
+    </div>
+
+    <!-- STAFF TAB -->
+    <div id="tab-staff" class="tab-hidden">
+      <div class="search-row">
+        <input type="text" id="staff-search" placeholder="Search staff by name…" oninput="renderStaff()">
+        <select id="staff-branch-filter" onchange="renderStaff()"><option value="">All Branches</option></select>
+        <select id="staff-status-filter" onchange="renderStaff()">
+          <option value="">All Status</option><option value="in">On Duty</option><option value="out">Away</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Staff Member</th><th>Role</th><th>Branch</th><th>Manager</th><th>Status</th><th>Last Seen</th><th>Actions</th></tr></thead>
+          <tbody id="master-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PRODUCTS TAB -->
+    <div id="tab-products" class="tab-hidden">
+      <div class="section-header">
+        <span class="section-title">Product Catalogue</span>
+        <button class="btn btn-primary" onclick="openAddProductModal()">+ Add Product</button>
+      </div>
+      <div class="search-row">
+        <input type="text" id="prod-search" placeholder="Search products…" oninput="renderProducts()">
+        <select id="prod-cat-filter" onchange="renderProducts()"><option value="">All Categories</option></select>
+      </div>
+      <div class="products-grid-admin" id="products-grid-admin"></div>
+    </div>
+
+    <!-- SPECIALS TAB -->
+    <div id="tab-specials" class="tab-hidden">
+      <div class="section-header">
+        <span class="section-title">Specials & Deals</span>
+        <button class="btn btn-primary" onclick="openAddSpecialModal()">+ Add Special</button>
+      </div>
+      <div id="specials-list-admin"></div>
+    </div>
+
+    <!-- ANALYTICS TAB -->
+    <div id="tab-analytics" class="tab-hidden">
+      <div class="grid-2" style="margin-bottom:24px">
+        <div class="card">
+          <div class="section-header" style="margin-bottom:12px"><span class="section-title">Check-ins Per Branch</span></div>
+          <div class="chart-bar-wrap" id="chart-branch"></div>
+        </div>
+        <div class="card">
+          <div class="section-header" style="margin-bottom:12px"><span class="section-title">Staff On Duty by Role</span></div>
+          <div class="chart-bar-wrap" id="chart-role"></div>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-bottom:24px">
+        <div class="card">
+          <div class="section-header" style="margin-bottom:12px"><span class="section-title">Products by Category</span></div>
+          <div class="chart-bar-wrap" id="chart-prod-cat"></div>
+        </div>
+        <div class="card">
+          <div class="section-header" style="margin-bottom:12px"><span class="section-title">Products by Branch</span></div>
+          <div class="chart-bar-wrap" id="chart-prod-branch"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="section-header" style="margin-bottom:12px"><span class="section-title">Price Range Distribution</span></div>
+        <div class="chart-bar-wrap" id="chart-price-range"></div>
+      </div>
+      <div class="card">
+        <div class="section-header" style="margin-bottom:12px">
+          <span class="section-title">Full Attendance Log</span>
+          <button class="btn-ghost" onclick="exportAllLogs()">↓ Export CSV</button>
+        </div>
+        <div class="table-wrap" style="border:none">
+          <table>
+            <thead><tr><th>Staff Name</th><th>Branch</th><th>Type</th><th>Time</th></tr></thead>
+            <tbody id="log-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ADD STAFF MODAL -->
+<div class="modal-bg" id="modal-add-staff">
+  <div class="modal">
+    <h3>Add Staff Member</h3>
+    <div class="field"><label>Full Name</label><input type="text" id="as-name" placeholder="e.g. Amara Nkosi"></div>
+    <div class="field"><label>Role</label>
+      <select id="as-role"><option>Waiter</option><option>Chef</option><option>Cashier</option><option>Host</option><option>Bartender</option><option>Cleaner</option><option>Supervisor</option></select>
+    </div>
+    <div class="field"><label>Branch</label><select id="as-branch"></select></div>
+    <div class="field"><label>Shift</label>
+      <select id="as-shift"><option>Morning</option><option>Afternoon</option><option>Evening</option><option>Night</option></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('modal-add-staff')">Cancel</button>
+      <button class="btn btn-primary" onclick="addStaff()">Add Staff</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD BRANCH MODAL -->
+<div class="modal-bg" id="modal-add-branch">
+  <div class="modal">
+    <h3>Add New Branch</h3>
+    <div class="field"><label>Branch Name</label><input type="text" id="ab-name"></div>
+    <div class="field"><label>Location / Address</label><input type="text" id="ab-location"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('modal-add-branch')">Cancel</button>
+      <button class="btn btn-primary" onclick="addBranch()">Add Branch</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT STAFF MODAL -->
+<div class="modal-bg" id="modal-edit-staff">
+  <div class="modal">
+    <h3>Edit Staff Member</h3>
+    <input type="hidden" id="es-idx">
+    <div class="field"><label>Full Name</label><input type="text" id="es-name"></div>
+    <div class="field"><label>Role</label>
+      <select id="es-role"><option>Waiter</option><option>Chef</option><option>Cashier</option><option>Host</option><option>Bartender</option><option>Cleaner</option><option>Supervisor</option></select>
+    </div>
+    <div class="field"><label>Branch</label><select id="es-branch"></select></div>
+    <div class="field"><label>Shift</label>
+      <select id="es-shift"><option>Morning</option><option>Afternoon</option><option>Evening</option><option>Night</option></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('modal-edit-staff')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditStaff()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PRODUCT MODAL -->
+<div class="modal-bg" id="modal-add-product">
+  <div class="modal">
+    <h3 id="product-modal-title">Add New Product</h3>
+    <input type="hidden" id="ap-idx" value="">
+    <div class="field"><label>Product Name *</label><input type="text" id="ap-name" placeholder="e.g. Sunflower Cooking Oil 2L"></div>
+    <div class="field"><label>Category</label><input type="text" id="ap-cat" placeholder="e.g. Cooking Oils, Cereals, Beverages…"></div>
+    <div class="field"><label>Price (ZMW) *</label><input type="number" id="ap-price" placeholder="0.00" step="0.01"></div>
+    <div class="field"><label>Unit / Size</label><input type="text" id="ap-unit" placeholder="e.g. 2L, 500g, Per Bag"></div>
+    <div class="field"><label>Image URL (optional)</label><input type="text" id="ap-image" placeholder="https://…"></div>
+    <div class="field"><label>Description (optional)</label><textarea id="ap-desc" placeholder="Brief product description…"></textarea></div>
+    <div class="field"><label>Available at Branches (leave blank = all)</label>
+      <div id="ap-branches-check" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;"></div>
+    </div>
+    <div class="field"><label>WhatsApp Order Phone</label><input type="text" id="ap-phone" placeholder="+260…"></div>
+    <div class="field"><label>In Stock</label>
+      <select id="ap-stock"><option value="yes">Yes</option><option value="no">No</option><option value="low">Low Stock</option></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('modal-add-product')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProduct()">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD SPECIAL MODAL -->
+<div class="modal-bg" id="modal-add-special">
+  <div class="modal">
+    <h3 id="special-modal-title">Add Special / Deal</h3>
+    <input type="hidden" id="asp-idx" value="">
+    <div class="field"><label>Product Name *</label><input type="text" id="asp-name" placeholder="e.g. Rice 25kg Bag"></div>
+    <div class="field"><label>Category</label><input type="text" id="asp-cat" placeholder="e.g. Cereals"></div>
+    <div class="field"><label>Deal Type</label>
+      <select id="asp-deal"><option value="discount">Price Discount</option><option value="percent">Percentage Off</option><option value="bogo">Buy 1 Get 1</option></select>
+    </div>
+    <div class="field"><label>Original Price (ZMW)</label><input type="number" id="asp-old" placeholder="0.00" step="0.01"></div>
+    <div class="field"><label>Special Price (ZMW)</label><input type="number" id="asp-new" placeholder="0.00" step="0.01"></div>
+    <div class="field"><label>Discount % (if percentage deal)</label><input type="number" id="asp-pct" placeholder="e.g. 20"></div>
+    <div class="field"><label>Label Text</label><input type="text" id="asp-label" placeholder="e.g. Flash Sale, Weekend Deal"></div>
+    <div class="field"><label>Promo Code (optional)</label><input type="text" id="asp-promo" placeholder="e.g. SAVE20" style="text-transform:uppercase"></div>
+    <div class="field"><label>Image URL (optional)</label><input type="text" id="asp-image" placeholder="https://…"></div>
+    <div class="field"><label>Description</label><textarea id="asp-desc" placeholder="Tell customers about this deal…"></textarea></div>
+    <div class="field"><label>Unit / Size</label><input type="text" id="asp-unit" placeholder="e.g. 25kg Bag"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('modal-add-special')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSpecial()">Save Deal</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const gs=(k,d)=>{ try{return JSON.parse(localStorage.getItem(k))||d;}catch(e){return d;} };
+  const ss=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+  let currentTab = 'overview';
+
+  function toast(msg, type='success'){
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.className='toast '+type+' show';
+    setTimeout(()=>t.className='toast',2800);
+  }
+
+  function showTab(t) {
+    currentTab=t;
+    document.querySelectorAll('[id^="tab-"]').forEach(el=>el.classList.add('tab-hidden'));
+    document.getElementById('tab-'+t).classList.remove('tab-hidden');
+    document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+    const map={overview:0,inbox:1,branches:2,staff:3,products:4,specials:5,analytics:6};
+    document.querySelectorAll('.nav-item')[map[t]]?.classList.add('active');
+    const titles={overview:'Overview',inbox:'Inbox & Orders',branches:'Branches & Approvals',staff:'Staff Management',products:'Product Catalogue',specials:'Specials & Deals',analytics:'Analytics & Product Flow'};
+    document.getElementById('page-title').textContent=titles[t]||t;
+    render();
+  }
+
+  function render(){
+    updateBadges();
+    if(currentTab==='overview') renderOverview();
+    if(currentTab==='inbox') renderInbox();
+    if(currentTab==='branches') renderBranches();
+    if(currentTab==='staff') renderStaff();
+    if(currentTab==='products') renderProducts();
+    if(currentTab==='specials') renderSpecials();
+    if(currentTab==='analytics') renderAnalytics();
+  }
+
+  function updateBadges(){
+    const reqs=gs('yp_admin_requests',[]), mgrs=gs('yp_managers',[]);
+    document.getElementById('inbox-badge').textContent=reqs.length||'';
+    document.getElementById('inbox-badge').style.display=reqs.length?'':'none';
+    const pending=mgrs.filter(m=>m.status==='pending').length;
+    document.getElementById('approval-badge').textContent=pending||'';
+    document.getElementById('approval-badge').style.display=pending?'':'none';
+  }
+
+  function renderOverview(){
+    const staff=gs('yp_staff',[]), mgrs=gs('yp_managers',[]), brs=gs('yp_branches',[]), logs=gs('yp_logs',[]);
+    const products=gs('yp_products',[]), specials=gs('yp_specials',[]);
+    const onDuty=staff.filter(s=>(logs.filter(l=>l.name===s.name).pop()||{}).type==='in').length;
+    const activeMgrs=mgrs.filter(m=>m.status==='active').length;
+    document.getElementById('metrics-grid').innerHTML=`
+      <div class="metric accent">
+        <div class="metric-label">Total Branches</div>
+        <div class="metric-value">${brs.length}</div>
+        <div class="metric-sub" style="color:#6a4a35">Active locations</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Total Staff</div>
+        <div class="metric-value">${staff.length}</div>
+        <div class="metric-sub">${onDuty} on duty now</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Products</div>
+        <div class="metric-value">${products.length}</div>
+        <div class="metric-sub">${specials.length} active deals</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Active Managers</div>
+        <div class="metric-value">${activeMgrs}</div>
+        <div class="metric-sub">${mgrs.filter(m=>m.status==='pending').length} pending approval</div>
+      </div>`;
+
+    const reqs=gs('yp_admin_requests',[]);
+    document.getElementById('recent-inbox').innerHTML = reqs.slice(-3).reverse().map((r,i)=>`
+      <div class="inbox-item">
+        <div>
+          <div class="inbox-from">${r.from} <span style="color:var(--muted);font-weight:400">— ${r.branch}</span></div>
+          <div class="inbox-msg">${r.msg}</div>
+        </div>
+        <button class="btn-danger" onclick="clearReq(${i})">✕</button>
+      </div>`).join('')||'<p style="font-size:0.8rem;color:var(--muted)">No new requests.</p>';
+
+    document.getElementById('overview-branches').innerHTML = brs.map(b=>{
+      const m=mgrs.find(x=>x.branch===b.name&&x.status==='active');
+      const branchStaff=staff.filter(s=>s.branch===b.name);
+      const onDutyHere=branchStaff.filter(s=>(logs.filter(l=>l.name===s.name).pop()||{}).type==='in').length;
+      const branchProds=products.filter(p=>!p.branches||!p.branches.length||p.branches.includes(b.name));
+      return `<div class="branch-card">
+        <div>
+          <strong style="font-size:0.85rem">${b.name}</strong>
+          ${b.location?`<div style="font-size:0.7rem;color:var(--muted)">${b.location}</div>`:''}
+          <div style="font-size:0.7rem;color:var(--muted);margin-top:2px">Mgr: ${m?m.name:'Unassigned'} · ${onDutyHere}/${branchStaff.length} staff · ${branchProds.length} products</div>
+        </div>
+        <span class="branch-status">${b.status||'Open'}</span>
+      </div>`;
+    }).join('')||'<p style="font-size:0.8rem;color:var(--muted)">No branches yet.</p>';
+  }
+
+  function renderInbox(){
+    const reqs=gs('yp_admin_requests',[]);
+    document.getElementById('inbox-list').innerHTML = reqs.length ? reqs.map((r,i)=>`
+      <div class="inbox-item">
+        <div>
+          <div class="inbox-from">${r.from} <span style="font-weight:400;color:var(--muted)">from ${r.branch}</span></div>
+          <div class="inbox-msg">${r.msg}</div>
+          ${r.time?`<div class="inbox-time">${new Date(r.time).toLocaleString()}</div>`:''}
+        </div>
+        <button class="btn-danger" onclick="clearReq(${i})">Dismiss</button>
+      </div>`).join('') : '<p style="font-size:0.8rem;color:var(--muted)">No new requests.</p>';
+  }
+
+  function renderBranches(){
+    const mgrs=gs('yp_managers',[]), brs=gs('yp_branches',[]);
+    document.getElementById('approval-list').innerHTML = mgrs.filter(m=>m.status==='pending').map(m=>`
+      <div class="card" style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <strong>${m.name}</strong> wants to open <u>${m.branch}</u>
+          <div style="font-size:0.7rem;color:var(--muted)">@${m.username}</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-success" onclick="approveMgr('${m.username}','${m.branch}')">✓ Approve</button>
+          <button class="btn" style="background:var(--danger);color:white" onclick="rejectMgr('${m.username}')">✕ Reject</button>
+        </div>
+      </div>`).join('')||'<p style="font-size:0.8rem;color:var(--muted)">No pending approvals.</p>';
+
+    document.getElementById('branch-list').innerHTML = brs.map(b=>{
+      const m=mgrs.find(x=>x.branch===b.name&&x.status==='active');
+      const staff=gs('yp_staff',[]).filter(s=>s.branch===b.name);
+      return `<div class="branch-card">
+        <div>
+          <strong>${b.name}</strong>
+          ${b.location?`<div style="font-size:0.7rem;color:var(--muted)">${b.location}</div>`:''}
+          <div style="font-size:0.7rem;color:var(--muted);margin-top:2px">Manager: ${m?m.name:'None'} · ${staff.length} staff</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="branch-status ${(b.status||'Open')==='Closed'?'closed':''}">${b.status||'Open'}</span>
+          <button class="btn-ghost" onclick="toggleBranchStatus('${b.name}')">Toggle</button>
+          <button class="btn-danger" onclick="deleteBranch('${b.name}')">Remove</button>
+        </div>
+      </div>`;
+    }).join('')||'<p style="font-size:0.8rem;color:var(--muted)">No branches yet.</p>';
+  }
+
+  function renderStaff(){
+    const staff=gs('yp_staff',[]), mgrs=gs('yp_managers',[]), logs=gs('yp_logs',[]);
+    const q=(document.getElementById('staff-search')?.value||'').toLowerCase();
+    const bf=document.getElementById('staff-branch-filter')?.value||'';
+    const sf=document.getElementById('staff-status-filter')?.value||'';
+    const brs=gs('yp_branches',[]);
+    const bfEl=document.getElementById('staff-branch-filter');
+    if(bfEl && bfEl.options.length<=1){
+      brs.forEach(b=>{ const o=document.createElement('option');o.value=b.name;o.textContent=b.name;bfEl.appendChild(o); });
+    }
+    let filtered=staff.filter(s=>{
+      const isIn=(logs.filter(l=>l.name===s.name).pop()||{}).type==='in';
+      const status=isIn?'in':'out';
+      return (!q||s.name.toLowerCase().includes(q))&&(!bf||s.branch===bf)&&(!sf||status===sf);
+    });
+    document.getElementById('master-table').innerHTML = filtered.map((s,i)=>{
+      const isIn=(logs.filter(l=>l.name===s.name).pop()||{}).type==='in';
+      const m=mgrs.find(x=>x.branch===s.branch&&x.status==='active');
+      const lastLog=logs.filter(l=>l.name===s.name).pop();
+      const realIdx=staff.indexOf(s);
+      return `<tr>
+        <td><strong>${s.name}</strong></td>
+        <td><span class="badge badge-away">${s.role}</span></td>
+        <td>${s.branch}</td>
+        <td>${m?m.name:'—'}</td>
+        <td><span class="dot" style="background:${isIn?'var(--success)':'#ccc'}"></span><span class="badge ${isIn?'badge-active':'badge-away'}">${isIn?'On Duty':'Away'}</span></td>
+        <td style="color:var(--muted)">${lastLog?new Date(lastLog.time).toLocaleTimeString():'Never'}</td>
+        <td>
+          <button class="btn-ghost" style="padding:4px 8px;font-size:0.7rem" onclick="openEditStaff(${realIdx})">Edit</button>
+          <button class="btn-danger" onclick="deleteStaff(${realIdx})">Remove</button>
+        </td>
+      </tr>`;
+    }).join('')||`<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">No staff found.</td></tr>`;
+  }
+
+  // ─── PRODUCTS ─────────────────────────────────────────────
+  function renderProducts(){
+    const products=gs('yp_products',[]);
+    const q=(document.getElementById('prod-search')?.value||'').toLowerCase();
+    const cf=document.getElementById('prod-cat-filter')?.value||'';
+    const catEl=document.getElementById('prod-cat-filter');
+    if(catEl){
+      const cats=[...new Set(products.map(p=>p.category).filter(Boolean))];
+      if(catEl.options.length<=1){
+        cats.forEach(c=>{ const o=document.createElement('option');o.value=c;o.textContent=c;catEl.appendChild(o); });
+      }
+    }
+    let filtered=products.filter(p=>
+      (!q||p.name.toLowerCase().includes(q)||((p.category||'').toLowerCase().includes(q)))&&
+      (!cf||p.category===cf)
+    );
+    const grid=document.getElementById('products-grid-admin');
+    if(!grid) return;
+    grid.innerHTML=filtered.length?filtered.map((p,i)=>{
+      const realIdx=products.indexOf(p);
+      return `<div class="prod-admin-card">
+        ${p.isSpecial?'<div class="special-badge">Special</div>':''}
+        ${p.image?`<img src="${p.image}" alt="${p.name}" onerror="this.style.display='none'">`:`<div class="no-img">📦</div>`}
+        <div class="pcat">${p.category||'—'}</div>
+        <h4>${p.name}</h4>
+        ${p.unit?`<div style="font-size:0.7rem;color:var(--muted)">${p.unit}</div>`:''}
+        <div class="pprice">K${p.price}</div>
+        <div style="font-size:0.65rem;color:var(--muted);margin-top:3px">${p.stock==='no'?'Out of stock':p.stock==='low'?'Low stock':'In stock'}</div>
+        <div class="card-actions">
+          <button class="btn-ghost" style="padding:4px 8px;font-size:0.7rem;flex:1" onclick="openEditProduct(${realIdx})">Edit</button>
+          <button class="btn-danger" onclick="deleteProduct(${realIdx})">✕</button>
+        </div>
+      </div>`;
+    }).join('') : '<p style="color:var(--muted);font-size:0.85rem;padding:20px">No products yet. Click "+ Add Product" to start.</p>';
+  }
+
+  function openAddProductModal(){
+    document.getElementById('product-modal-title').textContent='Add New Product';
+    document.getElementById('ap-idx').value='';
+    ['ap-name','ap-cat','ap-price','ap-unit','ap-image','ap-desc','ap-phone'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('ap-stock').value='yes';
+    populateBranchCheckboxes('ap-branches-check', []);
+    document.getElementById('modal-add-product').classList.add('open');
+  }
+
+  function openEditProduct(idx){
+    const p=gs('yp_products',[])[idx];
+    if(!p) return;
+    document.getElementById('product-modal-title').textContent='Edit Product';
+    document.getElementById('ap-idx').value=idx;
+    document.getElementById('ap-name').value=p.name||'';
+    document.getElementById('ap-cat').value=p.category||'';
+    document.getElementById('ap-price').value=p.price||'';
+    document.getElementById('ap-unit').value=p.unit||'';
+    document.getElementById('ap-image').value=p.image||'';
+    document.getElementById('ap-desc').value=p.desc||'';
+    document.getElementById('ap-phone').value=p.phone||'';
+    document.getElementById('ap-stock').value=p.stock||'yes';
+    populateBranchCheckboxes('ap-branches-check', p.branches||[]);
+    document.getElementById('modal-add-product').classList.add('open');
+  }
+
+  function populateBranchCheckboxes(containerId, selected){
+    const brs=gs('yp_branches',[]);
+    const c=document.getElementById(containerId);
+    c.innerHTML=brs.map(b=>`<label style="display:flex;align-items:center;gap:4px;font-size:0.75rem;cursor:pointer;">
+      <input type="checkbox" value="${b.name}" ${selected.includes(b.name)?'checked':''}> ${b.name}
+    </label>`).join('');
+  }
+
+  function getCheckedBranches(containerId){
+    return [...document.querySelectorAll(`#${containerId} input[type=checkbox]:checked`)].map(c=>c.value);
+  }
+
+  function saveProduct(){
+    const name=document.getElementById('ap-name').value.trim();
+    const price=document.getElementById('ap-price').value;
+    if(!name||!price) return toast('Name and price are required','error');
+    const p={
+      name, price:parseFloat(price),
+      category:document.getElementById('ap-cat').value.trim(),
+      unit:document.getElementById('ap-unit').value.trim(),
+      image:document.getElementById('ap-image').value.trim(),
+      desc:document.getElementById('ap-desc').value.trim(),
+      phone:document.getElementById('ap-phone').value.trim(),
+      stock:document.getElementById('ap-stock').value,
+      branches:getCheckedBranches('ap-branches-check'),
+      addedAt:Date.now()
+    };
+    let products=gs('yp_products',[]);
+    const idxStr=document.getElementById('ap-idx').value;
+    if(idxStr!==''){
+      products[parseInt(idxStr)]=p;
+      toast('Product updated!');
+    } else {
+      products.push(p);
+      toast('Product added!');
+    }
+    ss('yp_products',products);
+    closeModal('modal-add-product');
+    renderProducts();
+  }
+
+  function deleteProduct(idx){
+    if(!confirm('Remove this product?')) return;
+    let products=gs('yp_products',[]);
+    products.splice(idx,1);
+    ss('yp_products',products);
+    toast('Product removed','error');
+    renderProducts();
+  }
+
+  // ─── SPECIALS ─────────────────────────────────────────────
+  function renderSpecials(){
+    const specials=gs('yp_specials',[]);
+    document.getElementById('specials-list-admin').innerHTML = specials.length ? specials.map((s,i)=>`
+      <div class="special-admin-card">
+        ${s.image?`<img src="${s.image}" alt="${s.name}" onerror="this.outerHTML='<div class=no-img>🏷️</div>'">`:`<div class="no-img">🏷️</div>`}
+        <div class="s-info">
+          <h4>${s.name}</h4>
+          <div class="s-meta">
+            ${s.category?`${s.category} · `:''}
+            ${s.dealType==='bogo'?'Buy 1 Get 1':s.percent?`${s.percent}% off`:`K${s.oldPrice||''} → K${s.newPrice||''}`}
+            ${s.promoCode?` · Code: <strong>${s.promoCode}</strong>`:''}
+          </div>
+          ${s.labelText?`<div style="font-size:0.68rem;color:var(--terracotta)">${s.labelText}</div>`:''}
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn-ghost" style="padding:4px 8px;font-size:0.7rem" onclick="openEditSpecial(${i})">Edit</button>
+          <button class="btn-danger" onclick="deleteSpecial(${i})">✕</button>
+        </div>
+      </div>`).join('') : '<p style="color:var(--muted);font-size:0.85rem;padding:20px">No specials yet. Click "+ Add Special" to create a deal.</p>';
+  }
+
+  function openAddSpecialModal(){
+    document.getElementById('special-modal-title').textContent='Add Special / Deal';
+    document.getElementById('asp-idx').value='';
+    ['asp-name','asp-cat','asp-old','asp-new','asp-pct','asp-label','asp-promo','asp-image','asp-desc','asp-unit'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('asp-deal').value='discount';
+    document.getElementById('modal-add-special').classList.add('open');
+  }
+
+  function openEditSpecial(idx){
+    const s=gs('yp_specials',[])[idx];
+    if(!s) return;
+    document.getElementById('special-modal-title').textContent='Edit Special';
+    document.getElementById('asp-idx').value=idx;
+    document.getElementById('asp-name').value=s.name||'';
+    document.getElementById('asp-cat').value=s.category||'';
+    document.getElementById('asp-deal').value=s.dealType||'discount';
+    document.getElementById('asp-old').value=s.oldPrice||'';
+    document.getElementById('asp-new').value=s.newPrice||'';
+    document.getElementById('asp-pct').value=s.percent||'';
+    document.getElementById('asp-label').value=s.labelText||'';
+    document.getElementById('asp-promo').value=s.promoCode||'';
+    document.getElementById('asp-image').value=s.image||'';
+    document.getElementById('asp-desc').value=s.desc||'';
+    document.getElementById('asp-unit').value=s.unit||'';
+    document.getElementById('modal-add-special').classList.add('open');
+  }
+
+  function saveSpecial(){
+    const name=document.getElementById('asp-name').value.trim();
+    if(!name) return toast('Product name is required','error');
+    const s={
+      name,
+      category:document.getElementById('asp-cat').value.trim(),
+      dealType:document.getElementById('asp-deal').value,
+      oldPrice:document.getElementById('asp-old').value||null,
+      newPrice:document.getElementById('asp-new').value||null,
+      percent:document.getElementById('asp-pct').value||null,
+      labelText:document.getElementById('asp-label').value.trim(),
+      promoCode:document.getElementById('asp-promo').value.trim().toUpperCase(),
+      image:document.getElementById('asp-image').value.trim(),
+      desc:document.getElementById('asp-desc').value.trim(),
+      unit:document.getElementById('asp-unit').value.trim(),
+      addedAt:Date.now()
+    };
+    let specials=gs('yp_specials',[]);
+    const idxStr=document.getElementById('asp-idx').value;
+    if(idxStr!==''){
+      specials[parseInt(idxStr)]=s;
+      toast('Special updated!');
+    } else {
+      specials.push(s);
+      toast('Special added!');
+    }
+    ss('yp_specials',specials);
+    closeModal('modal-add-special');
+    renderSpecials();
+  }
+
+  function deleteSpecial(idx){
+    if(!confirm('Remove this special?')) return;
+    let specials=gs('yp_specials',[]);
+    specials.splice(idx,1);
+    ss('yp_specials',specials);
+    toast('Special removed','error');
+    renderSpecials();
+  }
+
+  // ─── ANALYTICS ────────────────────────────────────────────
+  function renderAnalytics(){
+    const logs=gs('yp_logs',[]), staff=gs('yp_staff',[]), brs=gs('yp_branches',[]);
+    const products=gs('yp_products',[]);
+
+    // Staff check-ins per branch
+    const byBranch={};
+    brs.forEach(b=>byBranch[b.name]=0);
+    logs.filter(l=>l.type==='in').forEach(l=>{ if(byBranch[l.branch]!==undefined) byBranch[l.branch]++; });
+    const maxB=Math.max(...Object.values(byBranch),1);
+    document.getElementById('chart-branch').innerHTML = Object.entries(byBranch).map(([b,c])=>`
+      <div class="chart-row">
+        <div class="chart-row-label">${b.length>11?b.slice(0,11)+'…':b}</div>
+        <div class="chart-bar" style="width:${(c/maxB)*200}px"></div>
+        <div class="chart-val">${c}</div>
+      </div>`).join('')||'<p style="font-size:0.8rem;color:var(--muted)">No data yet.</p>';
+
+    // Staff on duty by role
+    const byRole={};
+    staff.forEach(s=>{
+      const isIn=(logs.filter(l=>l.name===s.name).pop()||{}).type==='in';
+      if(isIn){ byRole[s.role]=(byRole[s.role]||0)+1; }
+    });
+    const maxR=Math.max(...Object.values(byRole),1);
+    document.getElementById('chart-role').innerHTML = Object.keys(byRole).length ? Object.entries(byRole).map(([r,c])=>`
+      <div class="chart-row">
+        <div class="chart-row-label">${r}</div>
+        <div class="chart-bar" style="width:${(c/maxR)*200}px;background:var(--sienna)"></div>
+        <div class="chart-val">${c}</div>
+      </div>`).join('') : '<p style="font-size:0.8rem;color:var(--muted)">No staff currently on duty.</p>';
+
+    // Products by category
+    const byCat={};
+    products.forEach(p=>{ const c=p.category||'Uncategorised'; byCat[c]=(byCat[c]||0)+1; });
+    const maxC=Math.max(...Object.values(byCat),1);
+    document.getElementById('chart-prod-cat').innerHTML = Object.keys(byCat).length ? Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([c,n])=>`
+      <div class="flow-row">
+        <div class="flow-label">${c.length>14?c.slice(0,14)+'…':c}</div>
+        <div class="flow-bar" style="width:${(n/maxC)*200}px"></div>
+        <div class="flow-val">${n} product${n!==1?'s':''}</div>
+      </div>`).join('') : '<p style="font-size:0.8rem;color:var(--muted)">No products yet.</p>';
+
+    // Products by branch
+    const byBranchProd={};
+    brs.forEach(b=>byBranchProd[b.name]=0);
+    products.forEach(p=>{
+      if(!p.branches||!p.branches.length){ brs.forEach(b=>{ byBranchProd[b.name]=(byBranchProd[b.name]||0)+1; }); }
+      else p.branches.forEach(b=>{ byBranchProd[b]=(byBranchProd[b]||0)+1; });
+    });
+    const maxBP=Math.max(...Object.values(byBranchProd),1);
+    document.getElementById('chart-prod-branch').innerHTML = Object.keys(byBranchProd).length ? Object.entries(byBranchProd).sort((a,b)=>b[1]-a[1]).map(([b,n])=>`
+      <div class="flow-row">
+        <div class="flow-label">${b.length>14?b.slice(0,14)+'…':b}</div>
+        <div class="flow-bar" style="width:${(n/maxBP)*200}px;background:var(--success)"></div>
+        <div class="flow-val">${n}</div>
+      </div>`).join('') : '<p style="font-size:0.8rem;color:var(--muted)">No product branch data.</p>';
+
+    // Price range distribution
+    const ranges={'Under K20':0,'K20–K50':0,'K50–K100':0,'K100–K200':0,'Over K200':0};
+    products.forEach(p=>{
+      const pr=parseFloat(p.price)||0;
+      if(pr<20) ranges['Under K20']++;
+      else if(pr<50) ranges['K20–K50']++;
+      else if(pr<100) ranges['K50–K100']++;
+      else if(pr<200) ranges['K100–K200']++;
+      else ranges['Over K200']++;
+    });
+    const maxPR=Math.max(...Object.values(ranges),1);
+    document.getElementById('chart-price-range').innerHTML = Object.entries(ranges).map(([r,n])=>`
+      <div class="flow-row">
+        <div class="flow-label">${r}</div>
+        <div class="flow-bar" style="width:${(n/maxPR)*300}px;background:var(--warning)"></div>
+        <div class="flow-val">${n} product${n!==1?'s':''}</div>
+      </div>`).join('');
+
+    // Log table
+    document.getElementById('log-table').innerHTML=[...logs].reverse().slice(0,50).map(l=>`
+      <tr>
+        <td>${l.name}</td><td>${l.branch}</td>
+        <td><span class="badge ${l.type==='in'?'badge-active':'badge-away'}">${l.type==='in'?'Check In':'Check Out'}</span></td>
+        <td style="color:var(--muted)">${new Date(l.time).toLocaleString()}</td>
+      </tr>`).join('')||`<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">No logs yet.</td></tr>`;
+  }
+
+  // ─── ACTIONS ──────────────────────────────────────────────
+  function sendNotice(){
+    const v=document.getElementById('notice-input').value.trim();
+    if(!v) return toast('Please type a message first','error');
+    ss('yp_admin_notice',v);
+    document.getElementById('notice-input').value='';
+    toast('Notice sent to all managers!');
+  }
+
+  function clearReq(i){
+    let r=gs('yp_admin_requests',[]);r.splice(i,1);ss('yp_admin_requests',r);render();
+  }
+  function clearAllReqs(){ ss('yp_admin_requests',[]); toast('All requests cleared'); render(); }
+
+  function approveMgr(u,b){
+    let m=gs('yp_managers',[]),brs=gs('yp_branches',[]);
+    if(!brs.find(x=>x.name===b)) brs.push({id:Date.now(),name:b,status:'Open'});
+    const idx=m.findIndex(x=>x.username===u);
+    if(idx!==-1) m[idx].status='active';
+    ss('yp_managers',m);ss('yp_branches',brs);
+    toast('Manager approved!'); render();
+  }
+
+  function rejectMgr(u){
+    let m=gs('yp_managers',[]);
+    const idx=m.findIndex(x=>x.username===u);
+    if(idx!==-1) m.splice(idx,1);
+    ss('yp_managers',m); toast('Manager request rejected','error'); render();
+  }
+
+  function toggleBranchStatus(name){
+    let brs=gs('yp_branches',[]);
+    const b=brs.find(x=>x.name===name);
+    if(b) b.status=b.status==='Closed'?'Open':'Closed';
+    ss('yp_branches',brs); render();
+  }
+
+  function deleteBranch(name){
+    if(!confirm(`Remove branch "${name}"?`)) return;
+    let brs=gs('yp_branches',[]);
+    brs=brs.filter(b=>b.name!==name);
+    ss('yp_branches',brs); toast('Branch removed','error'); render();
+  }
+
+  function openAddStaffModal(){
+    const sel=document.getElementById('as-branch');
+    sel.innerHTML='';
+    gs('yp_branches',[]).forEach(b=>{ const o=document.createElement('option');o.value=b.name;o.textContent=b.name;sel.appendChild(o); });
+    if(!sel.options.length){ toast('Add a branch first','error'); return; }
+    document.getElementById('modal-add-staff').classList.add('open');
+  }
+
+  function addStaff(){
+    const n=document.getElementById('as-name').value.trim();
+    const r=document.getElementById('as-role').value;
+    const b=document.getElementById('as-branch').value;
+    const sh=document.getElementById('as-shift').value;
+    if(!n) return toast('Name required','error');
+    let staff=gs('yp_staff',[]);
+    staff.push({name:n,role:r,branch:b,shift:sh});
+    ss('yp_staff',staff);
+    closeModal('modal-add-staff');
+    document.getElementById('as-name').value='';
+    toast('Staff member added!'); render();
+  }
+
+  function openEditStaff(i){
+    const staff=gs('yp_staff',[]);const s=staff[i];
+    document.getElementById('es-idx').value=i;
+    document.getElementById('es-name').value=s.name;
+    document.getElementById('es-role').value=s.role;
+    document.getElementById('es-shift').value=s.shift||'Morning';
+    const sel=document.getElementById('es-branch');
+    sel.innerHTML='';
+    gs('yp_branches',[]).forEach(b=>{ const o=document.createElement('option');o.value=b.name;o.textContent=b.name;if(b.name===s.branch)o.selected=true;sel.appendChild(o); });
+    document.getElementById('modal-edit-staff').classList.add('open');
+  }
+
+  function saveEditStaff(){
+    const i=parseInt(document.getElementById('es-idx').value);
+    let staff=gs('yp_staff',[]);
+    staff[i]={...staff[i],name:document.getElementById('es-name').value,role:document.getElementById('es-role').value,branch:document.getElementById('es-branch').value,shift:document.getElementById('es-shift').value};
+    ss('yp_staff',staff);closeModal('modal-edit-staff');toast('Staff updated!');render();
+  }
+
+  function deleteStaff(i){
+    if(!confirm('Remove this staff member?')) return;
+    let staff=gs('yp_staff',[]);staff.splice(i,1);ss('yp_staff',staff);toast('Staff removed','error');render();
+  }
+
+  function openAddBranchModal(){ document.getElementById('modal-add-branch').classList.add('open'); }
+  function addBranch(){
+    const n=document.getElementById('ab-name').value.trim();
+    const loc=document.getElementById('ab-location').value.trim();
+    if(!n) return toast('Branch name required','error');
+    let brs=gs('yp_branches',[]);
+    if(brs.find(b=>b.name===n)) return toast('Branch already exists','error');
+    brs.push({id:Date.now(),name:n,location:loc,status:'Open'});
+    ss('yp_branches',brs);
+    document.getElementById('ab-name').value='';document.getElementById('ab-location').value='';
+    closeModal('modal-add-branch');toast('Branch added!');render();
+  }
+
+  function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+  document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); }));
+
+  function exportAll(){
+    const data={branches:gs('yp_branches',[]),managers:gs('yp_managers',[]),staff:gs('yp_staff',[]),logs:gs('yp_logs',[]),products:gs('yp_products',[]),specials:gs('yp_specials',[])};
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='youngphiroz_data.json';a.click();
+    toast('Data exported!');
+  }
+
+  function exportAllLogs(){
+    const logs=gs('yp_logs',[]);
+    let csv="Name,Branch,Type,Time\n"+logs.map(l=>`${l.name},${l.branch},${l.type},${new Date(l.time).toLocaleString()}`).join("\n");
+    const blob=new Blob([csv],{type:'text/csv'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='attendance_all.csv';a.click();
+    toast('Attendance CSV exported!');
+  }
+
+  render();
+</script>
+</body>
+</html>

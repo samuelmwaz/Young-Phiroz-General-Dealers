@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Staff Portal — Young Phiroz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --sand:#f0e8df;--cream:#faf5f0;--terracotta:#c17a55;--sienna:#a05c38;
+      --dark:#2c1a0e;--text-light:#8b6f5e;--success:#6a9f6a;--danger:#c05a5a;
+      --border:#e8ddd5;--white:#ffffff;--break:#d4a843;--info:#5a8fc0;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;outline:none;}
+    body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--dark);min-height:100vh;display:flex;flex-direction:column;}
+
+    /* ─── NAVIGATION ─── */
+    .nav{background:var(--dark);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;color:white;position:sticky;top:0;z-index:100;}
+    .nav h1{font-family:'Cormorant Garamond';font-size:1.4rem;letter-spacing:1px;}
+    .nav-tabs{display:flex;gap:6px;flex-wrap:wrap;}
+    .tab-link{font-size:0.62rem;text-transform:uppercase;letter-spacing:1px;cursor:pointer;opacity:0.6;transition:0.3s;padding:5px 8px;border-radius:2px;}
+    .tab-link.active{opacity:1;background:rgba(193,122,85,0.25);color:var(--terracotta);}
+
+    /* ─── LAYOUT ─── */
+    .container{max-width:480px;margin:30px auto;padding:0 16px;width:100%;}
+    .card{background:var(--white);padding:28px;border:1px solid var(--border);box-shadow:0 12px 30px rgba(0,0,0,0.06);animation:fadeUp 0.3s ease;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    h2{font-family:'Cormorant Garamond';margin-bottom:22px;font-size:1.75rem;text-align:center;}
+    h3{font-family:'Cormorant Garamond';font-size:1.2rem;margin-bottom:14px;}
+
+    /* ─── FORM ELEMENTS ─── */
+    .field{margin-bottom:16px;}
+    .field label{display:block;font-size:0.6rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;color:var(--text-light);}
+    input,select{width:100%;padding:11px 12px;border:1px solid var(--sand);background:var(--cream);font-family:inherit;font-size:0.88rem;transition:border 0.2s;}
+    input:focus,select:focus{border-color:var(--terracotta);}
+    .btn-p{width:100%;background:var(--terracotta);color:white;border:none;padding:14px;text-transform:uppercase;font-size:0.72rem;letter-spacing:2px;cursor:pointer;margin-top:8px;transition:0.25s;}
+    .btn-p:hover{background:var(--sienna);}
+    .btn-sm{padding:10px 18px;font-size:0.68rem;letter-spacing:1.5px;width:auto;margin-top:0;}
+    .btn-outline{background:transparent;border:1px solid var(--terracotta);color:var(--terracotta);}
+    .btn-outline:hover{background:var(--terracotta);color:white;}
+    .btn-danger{background:var(--danger);}
+    .btn-danger:hover{background:#a03a3a;}
+    .btn-break{background:var(--break);color:var(--dark);}
+    .btn-break:hover{background:#b8922f;}
+    .hidden{display:none!important;}
+
+    /* ─── STATUS & LOGS ─── */
+    .status-box{text-align:center;padding:14px;background:var(--cream);margin-bottom:16px;border:1px dashed var(--sand);}
+    .status-row{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+    .status-row .btn-p{flex:1;min-width:120px;}
+    .log-item{padding:10px 0;border-bottom:1px solid var(--cream);display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;font-size:0.78rem;}
+    .log-item:last-child{border-bottom:none;}
+    .log-date{font-size:0.68rem;color:var(--text-light);}
+    .badge{display:inline-block;padding:2px 8px;font-size:0.62rem;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;border-radius:2px;}
+    .badge.in{color:var(--success);border:1px solid var(--success);}
+    .badge.out{color:var(--danger);border:1px solid var(--danger);}
+    .badge.break-start{color:var(--break);border:1px solid var(--break);}
+    .badge.break-end{color:var(--info);border:1px solid var(--info);}
+    .in{color:var(--success);font-weight:600;}
+    .out{color:var(--danger);font-weight:600;}
+
+    /* ─── PIN MODAL ─── */
+    .modal-overlay{position:fixed;inset:0;background:rgba(44,26,14,0.6);display:flex;align-items:center;justify-content:center;z-index:200;animation:fadeIn 0.2s;}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    .modal{background:var(--white);padding:30px;width:90%;max-width:340px;border:1px solid var(--border);box-shadow:0 20px 50px rgba(0,0,0,0.15);}
+    .pin-dots{display:flex;justify-content:center;gap:12px;margin:20px 0;}
+    .pin-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--border);transition:0.2s;}
+    .pin-dot.filled{background:var(--terracotta);border-color:var(--terracotta);}
+    .pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+    .pin-btn{padding:16px;border:1px solid var(--sand);background:var(--cream);font-family:'Cormorant Garamond';font-size:1.2rem;cursor:pointer;transition:0.2s;text-align:center;}
+    .pin-btn:hover{background:var(--sand);}
+    .pin-btn.wide{grid-column:span 2;}
+    .modal-title{font-family:'Cormorant Garamond';font-size:1.3rem;text-align:center;margin-bottom:4px;}
+    .modal-sub{font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-light);text-align:center;}
+    .pin-error{color:var(--danger);font-size:0.72rem;text-align:center;min-height:18px;}
+
+    /* ─── SUMMARY TILES ─── */
+    .tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+    .tile{background:var(--cream);padding:14px;border:1px solid var(--border);text-align:center;}
+    .tile-val{font-family:'Cormorant Garamond';font-size:1.9rem;color:var(--terracotta);}
+    .tile-lbl{font-size:0.62rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-light);margin-top:2px;}
+
+    /* ─── SCHEDULE ─── */
+    .schedule-day{padding:10px 0;border-bottom:1px solid var(--border);}
+    .schedule-day:last-child{border-bottom:none;}
+    .day-name{font-size:0.65rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-light);}
+    .day-shift{font-size:0.85rem;margin-top:3px;}
+    .no-shift{font-size:0.78rem;color:var(--text-light);font-style:italic;}
+
+    /* ─── FILTER BAR ─── */
+    .filter-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+    .filter-bar input,.filter-bar select{flex:1;min-width:100px;padding:9px 10px;font-size:0.8rem;}
+
+    /* ─── PROFILE EDIT ─── */
+    .profile-avatar{width:60px;height:60px;background:var(--sand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond';font-size:1.5rem;color:var(--terracotta);margin:0 auto 16px;border:2px solid var(--border);}
+    .divider{height:1px;background:var(--border);margin:20px 0;}
+    .danger-zone{border:1px solid var(--danger);padding:16px;margin-top:16px;}
+    .danger-zone p{font-size:0.72rem;color:var(--text-light);margin-bottom:10px;}
+
+    /* ─── TOAST ─── */
+    .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--dark);color:white;padding:12px 24px;font-size:0.78rem;letter-spacing:0.5px;z-index:999;transition:transform 0.3s;pointer-events:none;}
+    .toast.show{transform:translateX(-50%) translateY(0);}
+
+    /* ─── EXPORT BTN ─── */
+    .top-actions{display:flex;justify-content:flex-end;margin-bottom:14px;}
+
+    /* ─── RESPONSIVE ─── */
+    @media(max-width:400px){
+      .nav h1{font-size:1.1rem;}
+      .tab-link{font-size:0.55rem;padding:4px 6px;}
+      .card{padding:20px;}
+      h2{font-size:1.5rem;}
+      .tiles{grid-template-columns:1fr 1fr;}
+    }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <h1>Young Phiroz</h1>
+  <div class="nav-tabs">
+    <div class="tab-link active" id="btn-reg" onclick="showTab('reg')">Register</div>
+    <div class="tab-link" id="btn-login" onclick="showTab('login')">Check-In</div>
+    <div class="tab-link" id="btn-history" onclick="showTab('history')">History</div>
+    <div class="tab-link" id="btn-schedule" onclick="showTab('schedule')">Schedule</div>
+    <div class="tab-link" id="btn-profile" onclick="showTab('profile')">Profile</div>
+  </div>
+</nav>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- PIN MODAL -->
+<div class="modal-overlay hidden" id="pin-modal">
+  <div class="modal">
+    <p class="modal-title" id="pin-modal-title">Verify Identity</p>
+    <p class="modal-sub" id="pin-modal-sub">Enter your 4-digit PIN</p>
+    <div class="pin-dots">
+      <div class="pin-dot" id="dot-0"></div>
+      <div class="pin-dot" id="dot-1"></div>
+      <div class="pin-dot" id="dot-2"></div>
+      <div class="pin-dot" id="dot-3"></div>
+    </div>
+    <p class="pin-error" id="pin-error"></p>
+    <div class="pin-pad">
+      <button class="pin-btn" onclick="pinPress('1')">1</button>
+      <button class="pin-btn" onclick="pinPress('2')">2</button>
+      <button class="pin-btn" onclick="pinPress('3')">3</button>
+      <button class="pin-btn" onclick="pinPress('4')">4</button>
+      <button class="pin-btn" onclick="pinPress('5')">5</button>
+      <button class="pin-btn" onclick="pinPress('6')">6</button>
+      <button class="pin-btn" onclick="pinPress('7')">7</button>
+      <button class="pin-btn" onclick="pinPress('8')">8</button>
+      <button class="pin-btn" onclick="pinPress('9')">9</button>
+      <button class="pin-btn" onclick="pinClear()">⌫</button>
+      <button class="pin-btn" onclick="pinPress('0')">0</button>
+      <button class="pin-btn" onclick="closePinModal()" style="font-size:0.7rem;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ══════════════════════════════ REGISTER ══════════════════════════════ -->
+  <section id="tab-reg">
+    <div class="card">
+      <h2>Staff Registration</h2>
+      <div class="field">
+        <label>Your Full Name</label>
+        <input type="text" id="r-name" placeholder="Name and Surname">
+      </div>
+      <div class="field">
+        <label>Assigned Branch</label>
+        <select id="r-branch">
+          <option value="">Loading active branches...</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Your Position</label>
+        <select id="r-role-sel" onchange="checkRole()">
+          <option value="">-- Choose Position --</option>
+          <option value="Sales Consultant">Sales Consultant</option>
+          <option value="Security">Security</option>
+          <option value="Inventory">Inventory</option>
+          <option value="other">Other (Manual Entry)</option>
+        </select>
+        <input type="text" id="r-role-manual" class="hidden" placeholder="Type your role here..." style="margin-top:10px;">
+      </div>
+      <div class="field">
+        <label>Set a 4-Digit PIN (for check-in security)</label>
+        <input type="password" id="r-pin" maxlength="4" placeholder="e.g. 1234" inputmode="numeric">
+      </div>
+      <button class="btn-p" onclick="register()">Create My Account</button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════ CHECK-IN ══════════════════════════════ -->
+  <section id="tab-login" class="hidden">
+    <div class="card">
+      <h2>Staff Check-In</h2>
+      <div class="field">
+        <label>Select Your Name</label>
+        <select id="l-name" onchange="refreshStatus()"></select>
+      </div>
+
+      <div id="status-area" class="status-box hidden">
+        <p id="current-status" style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;"></p>
+        <p id="time-on-shift" style="font-size:0.68rem;color:var(--text-light);margin-top:4px;"></p>
+      </div>
+
+      <div id="action-btn-area" class="status-row"></div>
+
+      <div style="margin-top:24px;">
+        <p style="font-size:0.6rem;text-transform:uppercase;color:var(--text-light);margin-bottom:8px;">Recent Activity</p>
+        <div id="recent-logs"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════ HISTORY ══════════════════════════════ -->
+  <section id="tab-history" class="hidden">
+    <div class="card">
+      <h2>Attendance History</h2>
+
+      <div class="filter-bar">
+        <select id="h-name-filter" onchange="renderHistory()">
+          <option value="">All Staff</option>
+        </select>
+        <input type="date" id="h-date-filter" onchange="renderHistory()">
+        <select id="h-type-filter" onchange="renderHistory()">
+          <option value="">All Types</option>
+          <option value="in">Clock In</option>
+          <option value="out">Clock Out</option>
+          <option value="break-start">Break Start</option>
+          <option value="break-end">Break End</option>
+        </select>
+      </div>
+
+      <div class="tiles" id="history-tiles"></div>
+
+      <div class="top-actions">
+        <button class="btn-p btn-sm btn-outline" onclick="exportCSV()">↓ Export CSV</button>
+      </div>
+
+      <div id="history-list"></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════ SCHEDULE ══════════════════════════════ -->
+  <section id="tab-schedule" class="hidden">
+    <div class="card">
+      <h2>My Schedule</h2>
+      <div class="field">
+        <label>Select Staff Member</label>
+        <select id="s-name" onchange="renderSchedule()"></select>
+      </div>
+      <div id="schedule-view"></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════ PROFILE ══════════════════════════════ -->
+  <section id="tab-profile" class="hidden">
+    <div class="card">
+      <h2>My Profile</h2>
+      <div class="field">
+        <label>Select Staff Member</label>
+        <select id="p-name" onchange="loadProfile()"></select>
+      </div>
+      <div id="profile-form" class="hidden">
+        <div class="profile-avatar" id="profile-initial"></div>
+
+        <div class="field">
+          <label>Full Name</label>
+          <input type="text" id="p-name-edit">
+        </div>
+        <div class="field">
+          <label>Branch</label>
+          <select id="p-branch-edit"></select>
+        </div>
+        <div class="field">
+          <label>Position</label>
+          <input type="text" id="p-role-edit">
+        </div>
+        <div class="field">
+          <label>Change PIN (leave blank to keep current)</label>
+          <input type="password" id="p-pin-edit" maxlength="4" placeholder="New 4-digit PIN" inputmode="numeric">
+        </div>
+
+        <button class="btn-p" onclick="saveProfile()">Save Changes</button>
+
+        <div class="divider"></div>
+        <div class="danger-zone">
+          <p>Permanently delete this staff member and all their records.</p>
+          <button class="btn-p btn-sm btn-danger" onclick="deleteStaff()">Delete Account</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /container -->
+
+<script>
+  // ─── STORAGE HELPERS
+  const gs = (k,d) => { try{ return JSON.parse(localStorage.getItem(k)) || d; }catch{ return d; } };
+  const ss = (k,v) => localStorage.setItem(k, JSON.stringify(v));
+
+  // ─── TOAST
+  function toast(msg, dur=2500){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), dur);
+  }
+
+  // ─── UTILS
+  function showTab(t){
+    ['reg','login','history','schedule','profile'].forEach(id => {
+      document.getElementById('tab-'+id).classList.toggle('hidden', id !== t);
+      document.getElementById('btn-'+id).classList.toggle('active', id === t);
+    });
+    if(t==='login') initLoginTab();
+    if(t==='history') initHistoryTab();
+    if(t==='schedule') initScheduleTab();
+    if(t==='profile') initProfileTab();
+  }
+
+  function checkRole(){
+    const s = document.getElementById('r-role-sel');
+    const m = document.getElementById('r-role-manual');
+    m.classList.toggle('hidden', s.value !== 'other');
+  }
+
+  function fmtTime(ts){
+    return new Date(ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  }
+  function fmtDate(ts){
+    return new Date(ts).toLocaleDateString([], {day:'2-digit', month:'short', year:'numeric'});
+  }
+  function fmtDuration(ms){
+    const h = Math.floor(ms/3600000);
+    const m = Math.floor((ms%3600000)/60000);
+    return h ? `${h}h ${m}m` : `${m}m`;
+  }
+
+  // ─── BRANCHES
+  function loadBranches(selId){
+    const sel = document.getElementById(selId);
+    const branches = gs('yp_branches', []);
+    const managers = gs('yp_managers', []);
+    let list = [...new Set([...branches.map(b=>b.name), ...managers.map(m=>m.branch)])];
+    if(list.length === 0){
+      sel.innerHTML = '<option value="">No Active Branches Found</option>';
+    } else {
+      sel.innerHTML = '<option value="">-- Select Branch --</option>' +
+        list.map(b => `<option value="${b}">${b}</option>`).join('');
+    }
+  }
+
+  // ─── REGISTER
+  function register(){
+    const name = document.getElementById('r-name').value.trim();
+    const branch = document.getElementById('r-branch').value;
+    const roleSel = document.getElementById('r-role-sel').value;
+    const roleMan = document.getElementById('r-role-manual').value.trim();
+    const pin = document.getElementById('r-pin').value.trim();
+    const finalRole = roleSel === 'other' ? roleMan : roleSel;
+
+    if(!name || !branch || !finalRole) return alert("Please complete all fields");
+    if(pin && (pin.length !== 4 || !/^\d{4}$/.test(pin))) return alert("PIN must be exactly 4 digits");
+
+    let staff = gs('yp_staff', []);
+    if(staff.find(s => s.name === name)) return alert("This name is already registered");
+
+    staff.push({ name, branch, role: finalRole, pin: pin || null, id: Date.now() });
+    ss('yp_staff', staff);
+    toast("✓ Registration Successful!");
+    showTab('login');
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // ─── PIN MODAL
+  let pinBuffer = '';
+  let pinCallback = null;
+  let pinMode = 'verify'; // verify | set
+
+  function openPinModal(title, sub, callback){
+    pinBuffer = '';
+    pinCallback = callback;
+    document.getElementById('pin-modal-title').textContent = title;
+    document.getElementById('pin-modal-sub').textContent = sub;
+    document.getElementById('pin-error').textContent = '';
+    updatePinDots();
+    document.getElementById('pin-modal').classList.remove('hidden');
+  }
+
+  function closePinModal(){
+    document.getElementById('pin-modal').classList.add('hidden');
+    pinBuffer = '';
+    pinCallback = null;
+  }
+
+  function pinPress(d){
+    if(pinBuffer.length >= 4) return;
+    pinBuffer += d;
+    updatePinDots();
+    if(pinBuffer.length === 4){
+      setTimeout(() => {
+        if(pinCallback) pinCallback(pinBuffer);
+      }, 150);
+    }
+  }
+
+  function pinClear(){
+    pinBuffer = pinBuffer.slice(0,-1);
+    updatePinDots();
+  }
+
+  function updatePinDots(){
+    for(let i=0;i<4;i++){
+      document.getElementById('dot-'+i).classList.toggle('filled', i < pinBuffer.length);
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // ─── CHECK-IN TAB
+  function initLoginTab(){
+    const sel = document.getElementById('l-name');
+    const staff = gs('yp_staff', []);
+    sel.innerHTML = '<option value="">Choose your name...</option>' +
+      staff.map(s => `<option value="${s.name}">${s.name} (${s.branch})</option>`).join('');
+    refreshStatus();
+  }
+
+  function refreshStatus(){
+    const name = document.getElementById('l-name').value;
+    const statusBox = document.getElementById('status-area');
+    const btnArea = document.getElementById('action-btn-area');
+    const logArea = document.getElementById('recent-logs');
+
+    if(!name){ statusBox.classList.add('hidden'); btnArea.innerHTML=''; logArea.innerHTML=''; return; }
+
+    const logs = gs('yp_logs', []);
+    const myLogs = logs.filter(l => l.name === name);
+    const lastLog = myLogs[myLogs.length - 1];
+    const isIn = lastLog && lastLog.type === 'in';
+    const isOnBreak = lastLog && lastLog.type === 'break-start';
+
+    // Status text
+    statusBox.classList.remove('hidden');
+    let statusLabel, statusClass;
+    if(isOnBreak){ statusLabel='On Break'; statusClass='break-start'; }
+    else if(isIn){ statusLabel='Clocked In'; statusClass='in'; }
+    else { statusLabel='Clocked Out'; statusClass='out'; }
+
+    document.getElementById('current-status').innerHTML =
+      `Status: <span class="${statusClass}" style="font-weight:600">${statusLabel}</span>`;
+
+    // Time on shift
+    const timeEl = document.getElementById('time-on-shift');
+    if(isIn || isOnBreak){
+      const clockInLog = [...myLogs].reverse().find(l => l.type === 'in');
+      if(clockInLog){
+        const elapsed = Date.now() - clockInLog.time;
+        timeEl.textContent = `Shift started at ${fmtTime(clockInLog.time)} · ${fmtDuration(elapsed)} elapsed`;
+      }
+    } else { timeEl.textContent = ''; }
+
+    // Action buttons
+    if(isOnBreak){
+      btnArea.innerHTML = `
+        <button class="btn-p btn-break" onclick="requirePin('${name}', 'break-end')">End Break</button>
+        <button class="btn-p btn-danger" onclick="requirePin('${name}', 'out')">Clock Out</button>`;
+    } else if(isIn){
+      btnArea.innerHTML = `
+        <button class="btn-p btn-break btn-sm" onclick="requirePin('${name}', 'break-start')">Start Break</button>
+        <button class="btn-p btn-danger" onclick="requirePin('${name}', 'out')">Clock Out</button>`;
+    } else {
+      btnArea.innerHTML = `
+        <button class="btn-p" onclick="requirePin('${name}', 'in')">Clock In</button>`;
+    }
+
+    // Recent logs
+    logArea.innerHTML = myLogs.slice(-4).reverse().map(l => `
+      <div class="log-item">
+        <span>${fmtTime(l.time)}</span>
+        <span class="log-date">${fmtDate(l.time)}</span>
+        <span class="badge ${l.type}">${l.type.replace('-',' ').toUpperCase()}</span>
+      </div>`).join('') || '<p style="font-size:0.72rem;color:#ccc;padding:8px 0;">No activity yet</p>';
+  }
+
+  function requirePin(name, type){
+    const staff = gs('yp_staff', []).find(s => s.name === name);
+    if(!staff || !staff.pin){
+      doLog(name, type);
+      return;
+    }
+    openPinModal(`Hello, ${name.split(' ')[0]}`, 'Enter your PIN to confirm', (entered) => {
+      if(entered === staff.pin){
+        closePinModal();
+        doLog(name, type);
+      } else {
+        document.getElementById('pin-error').textContent = 'Incorrect PIN. Try again.';
+        pinBuffer = '';
+        updatePinDots();
+      }
+    });
+  }
+
+  function doLog(name, type){
+    const staffMember = gs('yp_staff', []).find(s => s.name === name);
+    let logs = gs('yp_logs', []);
+    logs.push({ name, type, time: Date.now(), branch: staffMember.branch, method: 'Staff Self-Service' });
+    ss('yp_logs', logs);
+    const labels = { in:'Clocked In', out:'Clocked Out', 'break-start':'Break Started', 'break-end':'Break Ended' };
+    toast(`✓ ${labels[type] || type}`);
+    refreshStatus();
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // ─── HISTORY TAB
+  function initHistoryTab(){
+    const sel = document.getElementById('h-name-filter');
+    const staff = gs('yp_staff', []);
+    sel.innerHTML = '<option value="">All Staff</option>' +
+      staff.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+    renderHistory();
+  }
+
+  function renderHistory(){
+    let logs = gs('yp_logs', []);
+    const nameF = document.getElementById('h-name-filter').value;
+    const dateF = document.getElementById('h-date-filter').value;
+    const typeF = document.getElementById('h-type-filter').value;
+
+    if(nameF) logs = logs.filter(l => l.name === nameF);
+    if(typeF) logs = logs.filter(l => l.type === typeF);
+    if(dateF){
+      logs = logs.filter(l => {
+        const d = new Date(l.time);
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` === dateF;
+      });
+    }
+
+    // Tiles
+    const inLogs = logs.filter(l => l.type === 'in').length;
+    const bLogs = logs.filter(l => l.type === 'break-start').length;
+    document.getElementById('history-tiles').innerHTML = `
+      <div class="tile"><div class="tile-val">${logs.length}</div><div class="tile-lbl">Total Events</div></div>
+      <div class="tile"><div class="tile-val">${inLogs}</div><div class="tile-lbl">Clock-Ins</div></div>
+      <div class="tile"><div class="tile-val">${bLogs}</div><div class="tile-lbl">Breaks Taken</div></div>
+      <div class="tile"><div class="tile-val">${[...new Set(logs.map(l=>l.name))].length}</div><div class="tile-lbl">Staff Members</div></div>
+    `;
+
+    const sorted = [...logs].sort((a,b) => b.time - a.time);
+    document.getElementById('history-list').innerHTML = sorted.length ?
+      sorted.map(l => `
+        <div class="log-item">
+          <span style="font-weight:500">${l.name}</span>
+          <span class="log-date">${fmtDate(l.time)} ${fmtTime(l.time)}</span>
+          <span class="badge ${l.type}">${l.type.replace('-',' ').toUpperCase()}</span>
+        </div>`).join('') :
+      '<p style="font-size:0.78rem;color:var(--text-light);padding:20px 0;text-align:center;">No records match your filters</p>';
+  }
+
+  function exportCSV(){
+    let logs = gs('yp_logs', []);
+    if(!logs.length){ toast('No records to export'); return; }
+    const rows = [['Name','Branch','Type','Date','Time']];
+    [...logs].sort((a,b)=>b.time-a.time).forEach(l => {
+      const d = new Date(l.time);
+      rows.push([l.name, l.branch||'', l.type, fmtDate(l.time), fmtTime(l.time)]);
+    });
+    const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    a.download = `yp-staff-logs-${Date.now()}.csv`;
+    a.click();
+    toast('✓ CSV Exported');
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // ─── SCHEDULE TAB
+  const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+  function initScheduleTab(){
+    const sel = document.getElementById('s-name');
+    const staff = gs('yp_staff', []);
+    sel.innerHTML = '<option value="">-- Select Staff --</option>' +
+      staff.map(s => `<option value="${s.name}">${s.name} (${s.branch})</option>`).join('');
+    document.getElementById('schedule-view').innerHTML = '';
+  }
+
+  function renderSchedule(){
+    const name = document.getElementById('s-name').value;
+    const container = document.getElementById('schedule-view');
+    if(!name){ container.innerHTML=''; return; }
+
+    const schedules = gs('yp_schedules', {});
+    const mySchedule = schedules[name] || {};
+
+    let html = '<div style="margin-top:16px;">';
+    DAYS.forEach(day => {
+      const shift = mySchedule[day];
+      html += `<div class="schedule-day">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div class="day-name">${day}</div>
+            <div class="${shift ? 'day-shift' : 'no-shift'}">${shift ? `${shift.start} – ${shift.end}` : 'Rest Day'}</div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <input type="time" id="sh-start-${day}" value="${shift?.start||''}" style="width:90px;padding:6px;font-size:0.75rem;">
+            <input type="time" id="sh-end-${day}" value="${shift?.end||''}" style="width:90px;padding:6px;font-size:0.75rem;">
+          </div>
+        </div>
+      </div>`;
+    });
+    html += `</div><button class="btn-p" style="margin-top:14px;" onclick="saveSchedule('${name}')">Save Schedule</button>`;
+    container.innerHTML = html;
+  }
+
+  function saveSchedule(name){
+    const schedules = gs('yp_schedules', {});
+    const mySchedule = {};
+    DAYS.forEach(day => {
+      const s = document.getElementById('sh-start-'+day).value;
+      const e = document.getElementById('sh-end-'+day).value;
+      if(s && e) mySchedule[day] = {start:s, end:e};
+    });
+    schedules[name] = mySchedule;
+    ss('yp_schedules', schedules);
+    renderSchedule();
+    toast('✓ Schedule Saved');
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // ─── PROFILE TAB
+  function initProfileTab(){
+    const sel = document.getElementById('p-name');
+    const staff = gs('yp_staff', []);
+    sel.innerHTML = '<option value="">-- Select Staff --</option>' +
+      staff.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+    loadBranches('p-branch-edit');
+    document.getElementById('profile-form').classList.add('hidden');
+  }
+
+  function loadProfile(){
+    const name = document.getElementById('p-name').value;
+    const form = document.getElementById('profile-form');
+    if(!name){ form.classList.add('hidden'); return; }
+
+    const staff = gs('yp_staff', []).find(s => s.name === name);
+    if(!staff){ form.classList.add('hidden'); return; }
+
+    document.getElementById('profile-initial').textContent = name.charAt(0).toUpperCase();
+    document.getElementById('p-name-edit').value = staff.name;
+    document.getElementById('p-role-edit').value = staff.role;
+    document.getElementById('p-pin-edit').value = '';
+
+    // set branch dropdown
+    const branchSel = document.getElementById('p-branch-edit');
+    loadBranches('p-branch-edit');
+    setTimeout(()=>{ branchSel.value = staff.branch; }, 50);
+
+    form.classList.remove('hidden');
+  }
+
+  function saveProfile(){
+    const oldName = document.getElementById('p-name').value;
+    const newName = document.getElementById('p-name-edit').value.trim();
+    const newBranch = document.getElementById('p-branch-edit').value;
+    const newRole = document.getElementById('p-role-edit').value.trim();
+    const newPin = document.getElementById('p-pin-edit').value.trim();
+
+    if(!newName || !newBranch || !newRole) return alert("Please fill in all fields");
+    if(newPin && (newPin.length !== 4 || !/^\d{4}$/.test(newPin))) return alert("PIN must be exactly 4 digits");
+
+    let staff = gs('yp_staff', []);
+    const idx = staff.findIndex(s => s.name === oldName);
+    if(idx === -1) return;
+
+    const updPin = newPin ? newPin : staff[idx].pin;
+    staff[idx] = { ...staff[idx], name: newName, branch: newBranch, role: newRole, pin: updPin };
+    ss('yp_staff', staff);
+
+    // Update name in logs if changed
+    if(newName !== oldName){
+      let logs = gs('yp_logs', []);
+      logs = logs.map(l => l.name === oldName ? {...l, name: newName} : l);
+      ss('yp_logs', logs);
+    }
+
+    toast('✓ Profile Updated');
+    initProfileTab();
+  }
+
+  function deleteStaff(){
+    const name = document.getElementById('p-name').value;
+    if(!name) return;
+    if(!confirm(`Delete ${name} and all their records? This cannot be undone.`)) return;
+    let staff = gs('yp_staff', []).filter(s => s.name !== name);
+    let logs = gs('yp_logs', []).filter(l => l.name !== name);
+    ss('yp_staff', staff);
+    ss('yp_logs', logs);
+    toast('✓ Staff Member Removed');
+    initProfileTab();
+  }
+
+  // ─── INIT
+  window.onload = () => loadBranches('r-branch');
+</script>
+</body>
+</html>

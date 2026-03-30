@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Manager Portal — Young Phiroz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --sand:#f0e8df;--cream:#faf5f0;--terracotta:#c17a55;--sienna:#a05c38;--dark:#2c1a0e;
+      --text-light:#8b6f5e;--success:#6a9f6a;--danger:#c05a5a;--border:#e8ddd5;--white:#ffffff;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;outline:none;}
+    body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--dark);min-height:100vh;}
+
+    /* ─── AUTHENTICATION GATE ─── */
+    #gate{position:fixed;inset:0;background:var(--dark);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}
+    .gate-card{background:var(--white);width:100%;max-width:420px;padding:40px;box-shadow:0 20px 50px rgba(0,0,0,0.5);}
+    .gate-tabs{display:flex;margin-bottom:25px;border-bottom:1px solid var(--sand);}
+    .gate-tab{flex:1;padding:12px;background:none;border:none;font-family:'Jost';font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;cursor:pointer;color:var(--text-light);}
+    .gate-tab.active{color:var(--terracotta);border-bottom:2px solid var(--terracotta);}
+    .field{margin-bottom:15px;}
+    .field label{display:block;font-size:0.6rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-light);margin-bottom:5px;}
+    .field input{width:100%;padding:12px;border:1px solid var(--sand);background:var(--cream);font-family:inherit;}
+    
+    /* ─── MAIN LAYOUT ─── */
+    #app{display:none; min-height:100vh;}
+    .sidebar{width:260px;background:var(--dark);color:var(--white);padding:30px 20px;position:fixed;height:100vh;display:flex;flex-direction:column;}
+    .main-content{margin-left:260px;padding:40px;flex:1;}
+
+    /* ─── NAVIGATION ─── */
+    .nav-label{font-size:0.6rem;color:var(--terracotta);margin:25px 0 10px;letter-spacing:2px;text-transform:uppercase;}
+    .nav-item{padding:12px;cursor:pointer;font-size:0.8rem;letter-spacing:1px;color:var(--text-light);transition:0.3s;display:flex;align-items:center;gap:10px;}
+    .nav-item:hover, .nav-item.active{color:var(--white);background:rgba(255,255,255,0.05);}
+
+    /* ─── DASHBOARD ELEMENTS ─── */
+    .card{background:var(--white);padding:25px;border:1px solid var(--border);margin-bottom:20px;}
+    .top-bar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:40px;}
+    .btn-p{background:var(--terracotta);color:var(--white);border:none;padding:10px 20px;text-transform:uppercase;font-size:0.7rem;letter-spacing:1px;cursor:pointer;transition:0.3s;}
+    .btn-p:hover{background:var(--sienna);}
+
+    table{width:100%;border-collapse:collapse;margin-top:15px;}
+    th{text-align:left;font-size:0.65rem;text-transform:uppercase;color:var(--text-light);padding:12px;border-bottom:1px solid var(--sand);}
+    td{padding:14px 12px;font-size:0.85rem;border-bottom:1px solid var(--cream);}
+    
+    /* ─── UTILS ─── */
+    .status-pill{font-size:0.6rem;padding:4px 8px;text-transform:uppercase;border-radius:2px;}
+    .status-in{background:var(--success);color:white;}
+    .status-out{background:var(--sand);color:var(--text-light);}
+    progress{width:100px; height:6px; appearance:none;}
+    progress::-webkit-progress-bar{background:var(--sand);}
+    progress::-webkit-progress-value{background:var(--terracotta);}
+  </style>
+</head>
+<body>
+    <a href="manager.html" onclick="toggleMenu()">dashboard</a>
+
+<div id="gate">
+  <div class="gate-card">
+    <h2 style="font-family:'Cormorant Garamond';text-align:center;margin-bottom:5px">Young Phiroz</h2>
+    <p style="font-size:0.65rem;text-align:center;text-transform:uppercase;letter-spacing:2px;color:var(--text-light);margin-bottom:30px">Commander Access</p>
+    
+    <div class="gate-tabs">
+      <button class="gate-tab active" id="tab-l" onclick="toggleGate('login')">Login</button>
+      <button class="gate-tab" id="tab-r" onclick="toggleGate('reg')">Register</button>
+    </div>
+
+    <div id="login-form">
+      <div class="field"><label>Username</label><input type="text" id="l-user"></div>
+      <div class="field"><label>Password</label><input type="password" id="l-pass"></div>
+      <button class="btn-p" style="width:100%;padding:15px" onclick="doLogin()">Enter Dashboard</button>
+    </div>
+
+    <div id="reg-form" style="display:none">
+      <div class="field"><label>Full Name</label><input type="text" id="r-name"></div>
+      <div class="field"><label>Assigned Branch</label><input type="text" id="r-branch"></div>
+      <div class="field"><label>Username</label><input type="text" id="r-user"></div>
+      <div class="field"><label>Password</label><input type="password" id="r-pass"></div>
+      <button class="btn-p" style="width:100%;padding:15px" onclick="doRegister()">Request Account</button>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <aside class="sidebar">
+    <h2 style="font-family:'Cormorant Garamond';font-size:1.6rem">Portal</h2>
+    <div class="nav-grp">
+      <div class="nav-label">Management</div>
+      <div class="nav-item active" onclick="showPane('ops')">Staff Ops</div>
+      <div class="nav-item" onclick="showPane('finance')">Financials</div>
+      
+      <div class="nav-label">Organization</div>
+      <div class="nav-item" onclick="showPane('vault')">Company Vault</div>
+      <div class="nav-item" onclick="showPane('audit')">Audit Logs</div>
+    </div>
+    <button onclick="logout()" style="background:none;border:1px solid #444;color:#888;padding:10px;cursor:pointer;font-size:0.7rem;margin-top:auto">LOGOUT</button>
+  </aside>
+
+  <main class="main-content">
+    <header class="top-bar">
+      <div>
+        <h1 id="view-branch" style="font-family:'Cormorant Garamond';font-size:2.2rem">Branch</h1>
+        <p id="view-manager" style="color:var(--terracotta);font-size:0.7rem;text-transform:uppercase;letter-spacing:1px"></p>
+      </div>
+      <div id="admin-alert" style="background:var(--sienna);color:white;padding:12px 20px;font-size:0.75rem;display:none">
+        <strong>ADMIN ORDER:</strong> <span id="alert-text"></span>
+      </div>
+    </header>
+
+    <section id="pane-ops" class="pane">
+      <div class="card">
+        <h3>Live Roster</h3>
+        <table>
+          <thead><tr><th>Staff Member</th><th>Role</th><th>Status</th><th>Performance</th><th>Action</th></tr></thead>
+          <tbody id="staff-table"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="pane-finance" class="pane" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="card">
+          <h3>Petty Cash</h3>
+          <input type="text" id="pc-item" placeholder="Item/Service">
+          <input type="number" id="pc-amt" placeholder="Amount (ZMW)" style="margin-top:10px">
+          <button class="btn-p" style="margin-top:15px" onclick="addCash()">Log Expense</button>
+          <div id="pc-log" style="margin-top:20px;font-size:0.8rem"></div>
+        </div>
+        <div class="card">
+          <h3>Stock Request</h3>
+          <textarea id="st-msg" style="width:100%;height:100px;padding:10px;background:var(--cream);border:1px solid var(--sand)" placeholder="Details for Admin..."></textarea>
+          <button class="btn-p" style="margin-top:10px" onclick="requestStock()">Send Request</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="pane-vault" class="pane" style="display:none"><div class="card"><h3>Company Policies</h3><p>Code of Conduct 2026</p></div></section>
+    <section id="pane-audit" class="pane" style="display:none"><div class="card"><h3>Audit Trail</h3><div id="audit-list"></div></div></section>
+  </main>
+</div>
+
+<script>
+  const gs=(k,d)=>JSON.parse(localStorage.getItem(k))||d;
+  const ss=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+  let user = gs('yp_manager_session', null);
+
+  // ─── AUTH LOGIC ───
+  function toggleGate(m){
+    document.getElementById('login-form').style.display = m==='login'?'block':'none';
+    document.getElementById('reg-form').style.display = m==='reg'?'block':'none';
+    document.getElementById('tab-l').classList.toggle('active', m==='login');
+    document.getElementById('tab-r').classList.toggle('active', m==='reg');
+  }
+
+  function doRegister(){
+    const n=document.getElementById('r-name').value, b=document.getElementById('r-branch').value, 
+          u=document.getElementById('r-user').value, p=document.getElementById('r-pass').value;
+    if(!n||!b||!u||!p) return alert("Fill all fields");
+    let mgs = gs('yp_managers',[]);
+    mgs.push({name:n, branch:b, username:u, password:p, status:'pending'});
+    ss('yp_managers', mgs);
+    alert("Request Sent. Wait for Admin approval.");
+    toggleGate('login');
+  }
+
+  function doLogin(){
+    const u=document.getElementById('l-user').value, p=document.getElementById('l-pass').value;
+    const m = gs('yp_managers',[]).find(x=>x.username===u && x.password===p);
+    if(!m) return alert("Invalid Login");
+    if(m.status==='pending') return alert("Account Pending Approval");
+    ss('yp_manager_session', m);
+    location.reload();
+  }
+
+  // ─── DASHBOARD LOGIC ───
+  function showPane(p){
+    document.querySelectorAll('.pane').forEach(el=>el.style.display='none');
+    document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+    document.getElementById('pane-'+p).style.display='block';
+    event.currentTarget.classList.add('active');
+  }
+
+  function render(){
+    if(!user) return;
+    document.getElementById('gate').style.display='none';
+    document.getElementById('app').style.display='flex';
+    document.getElementById('view-branch').innerText = user.branch;
+    document.getElementById('view-manager').innerText = "Commander: " + user.name;
+
+    // Staff Ops
+    const staff = gs('yp_staff',[]).filter(s=>s.branch===user.branch);
+    const logs = gs('yp_logs',[]);
+    document.getElementById('staff-table').innerHTML = staff.map(s=>{
+      const isIn = (logs.filter(l=>l.name===s.name).pop() || {}).type === 'in';
+      return `<tr>
+        <td><strong>${s.name}</strong></td>
+        <td>${s.role}</td>
+        <td><span class="status-pill ${isIn?'status-in':'status-out'}">${isIn?'In':'Out'}</span></td>
+        <td><progress value="${Math.random()*40+60}" max="100"></progress></td>
+        <td><button onclick="toggleAttendance('${s.name}','${isIn?'out':'in'}')">Update</button></td>
+      </tr>`;
+    }).join('');
+
+    // Petty Cash
+    const pc = gs('yp_petty_cash',[]).filter(x=>x.branch===user.branch);
+    document.getElementById('pc-log').innerHTML = pc.map(x=>`<div>${x.item}: <b>K${x.amt}</b></div>`).join('');
+
+    // Audit
+    const audits = gs('yp_audit',[]).filter(x=>x.mgr===user.name);
+    document.getElementById('audit-list').innerHTML = audits.map(a=>`<div style="font-size:0.7rem;padding:5px;border-bottom:1px solid #eee">${a.time}: ${a.msg}</div>`).join('');
+  }
+
+  function toggleAttendance(name, type){
+    let l = gs('yp_logs',[]);
+    l.push({name, type, time:Date.now(), branch:user.branch, manager:user.name});
+    ss('yp_logs', l);
+    addAudit(`Clocked ${type.toUpperCase()} staff: ${name}`);
+    render();
+  }
+
+  function addCash(){
+    const it=document.getElementById('pc-item').value, am=document.getElementById('pc-amt').value;
+    if(!it||!am) return;
+    let pc = gs('yp_petty_cash',[]);
+    pc.push({item:it, amt:am, branch:user.branch});
+    ss('yp_petty_cash', pc);
+    addAudit(`Logged Petty Cash: ${it} (K${am})`);
+    render();
+  }
+
+  function addAudit(msg){
+    let au = gs('yp_audit',[]);
+    au.unshift({msg, time:new Date().toLocaleTimeString(), mgr:user.name});
+    ss('yp_audit', au);
+  }
+
+  function logout(){ localStorage.removeItem('yp_manager_session'); location.reload(); }
+  
+  if(user) render();
+</script>
+</body>
+</html>
